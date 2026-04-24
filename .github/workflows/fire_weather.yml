@@ -37,6 +37,7 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add public/images/*
+        mkdir -p public/images
+        git add public/images/
         # Only commit if there are changes
         git diff --quiet && git diff --staged --quiet || (git commit -m "Update fire weather maps" && git push)
