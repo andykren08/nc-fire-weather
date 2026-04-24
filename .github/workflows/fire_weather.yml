@@ -31,7 +31,7 @@ jobs:
         pip install numpy xarray netCDF4 requests matplotlib cartopy metpy ecmwflibs eccodes cfgrib
 
     - name: Run Fire Danger Script
-      run: python your_script_name.py # <-- CHANGE THIS to your actual python file name
+      run: python fire_danger.py # <-- CHANGE THIS to your actual python file name
 
     - name: Commit and Push Generated Images
       run: |
