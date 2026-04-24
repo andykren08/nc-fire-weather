@@ -196,7 +196,7 @@ def process_href(date_str, run_cycle, run_info):
 def process_ndfd():
     print("\n--- Processing NDFD Comparison ---")
     ndfd_wspd_url = "https://tgftp.nws.noaa.gov/SL.us008001/ST.opnl/DF.gr2/DC.ndfd/AR.conus/VP.001-003/ds.wspd.bin"
-    ndfd_gust_url = "https://tgftp.nws.noaa.gov/SL.us008001/ST.opnl/DF.gr2/DC.ndfd/AR.conus/VP.001-003/ds.gust.bin"
+    ndfd_gust_url = "https://tgftp.nws.noaa.gov/SL.us008001/ST.opnl/DF.gr2/DC.ndfd/AR.conus/VP.001-003/ds.wgust.bin"
     ndfd_rh_url = "https://tgftp.nws.noaa.gov/SL.us008001/ST.opnl/DF.gr2/DC.ndfd/AR.conus/VP.001-003/ds.rhm.bin"
     
     wspd_file = download_file(ndfd_wspd_url, "ndfd_wspd.grib2")
@@ -266,7 +266,6 @@ def process_ndfd():
                 danger_grid = calculate_fire_danger(rh_data, wind_mph, gust_mph)
                 generate_danger_plot(danger_grid, n_lats, n_lons, v_time, true_fhr, ndfd_run_info, model="NDFD")
                 
-                fhr += 1
                 
             ds_wspd.close()
             ds_rh.close()
