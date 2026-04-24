@@ -125,7 +125,7 @@
 
             // Absolute pathing + cache buster
             const timestamp = new Date().getTime();
-            imgElement.src = `/nc-fire-weather/public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
+            imgElement.src = `public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
             statusElement.innerText = `${model.toUpperCase()} - Forecast Hour ${fhr}`;
         }
 
