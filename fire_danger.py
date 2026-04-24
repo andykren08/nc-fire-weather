@@ -244,7 +244,7 @@ def process_ndfd():
                 wspd_idx = np.where(valid_times_wspd == v_time)[0][0]
                 
                 rh_data = ds_rh_sub.isel(step=rh_idx)['r2'].values if 'r2' in ds_rh_sub.data_vars else ds_rh_sub.isel(step=rh_idx)['2r'].values
-                wspd_ms = ds_wspd_sub.isel(step=wspd_idx)['10si'].values if '10si' in ds_wspd_sub.data_vars else ds_wspd_sub.isel(step=wspd_idx)['wspd'].values
+                wspd_ms = ds_wspd_sub.isel(step=wspd_idx)['si10'].values if 'si10' in ds_wspd_sub.data_vars else ds_wspd_sub.isel(step=wspd_idx)['wspd'].values
                 wind_mph = ms_to_mph(wspd_ms)
                 
                 # Default gust to sustained wind
