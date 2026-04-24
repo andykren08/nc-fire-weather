@@ -240,9 +240,13 @@ def process_ndfd():
             
             common_times = np.intersect1d(valid_times_rh, valid_times_wspd)
 
-            fhr = 1
             for v_time in np.sort(common_times):
-                if fhr > 48: break 
+                # Calculate the exact true forecast hour mathematically
+                time_diff = v_time - ds_rh_sub.time.values
+                true_fhr = int(time_diff / np.timedelta64(1, 'h'))
+                
+                if true_fhr > 48: break 
+                if true_fhr <= 0: continue
                 
                 rh_idx = np.where(valid_times_rh == v_time)[0][0]
                 wspd_idx = np.where(valid_times_wspd == v_time)[0][0]
@@ -260,7 +264,7 @@ def process_ndfd():
                     gust_mph = ms_to_mph(gust_ms)
 
                 danger_grid = calculate_fire_danger(rh_data, wind_mph, gust_mph)
-                generate_danger_plot(danger_grid, n_lats, n_lons, v_time, fhr, ndfd_run_info, model="NDFD")
+                generate_danger_plot(danger_grid, n_lats, n_lons, v_time, true_fhr, ndfd_run_info, model="NDFD")
                 
                 fhr += 1
                 
