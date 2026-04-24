@@ -5,75 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NC Fire Weather Forecast</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            background-color: #f4f4f4; 
-            margin: 0; 
-            padding: 20px; 
-        }
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; margin: 0; padding: 20px; }
         h1 { color: #333; margin-bottom: 5px; }
-        .controls {
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-        select, button {
-            padding: 10px 15px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button {
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
+        .controls { margin: 20px 0; display: flex; justify-content: center; align-items: center; gap: 15px; }
+        select, button { padding: 10px 15px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
+        button { background-color: #0056b3; color: white; border: none; font-weight: bold; transition: background 0.2s; }
         button:hover { background-color: #004494; }
-        .viewer-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            max-width: 900px;
-            margin: 0 auto;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        #mapImage {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #statusText {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 15px;
-            color: #444;
-        }
-        .instructions {
-            font-size: 14px;
-            color: #666;
-            margin-top: 10px;
-        }
-        .error-box {
-            padding: 40px;
-            background-color: #ffebee;
-            border: 2px dashed #ef9a9a;
-            border-radius: 8px;
-            color: #c62828;
-            font-weight: bold;
-            display: none;
-        }
+        .viewer-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 900px; margin: 0 auto; min-height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #mapImage { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; }
+        #statusText { font-size: 18px; font-weight: bold; margin-top: 15px; color: #444; }
+        .instructions { font-size: 14px; color: #666; margin-top: 10px; }
+        .error-box { padding: 40px; background-color: #ffebee; border: 2px dashed #ef9a9a; border-radius: 8px; color: #c62828; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
@@ -102,8 +44,8 @@
     <script>
         let currentHour = 1;
         const maxHour = 48;
-        let skipDirection = 1; // Remembers if we were clicking Next (1) or Prev (-1)
-        let skipAttempts = 0;  // Prevents infinite loops
+        let skipDirection = 1; 
+        let skipAttempts = 0;  
 
         function updateImage() {
             const model = document.getElementById("modelSelect").value;
@@ -113,26 +55,19 @@
             const statusElement = document.getElementById("statusText");
             const errorBox = document.getElementById("errorBox");
 
-            // Hide error box and show image area
             imgElement.style.display = "block";
             errorBox.style.display = "none";
 
             const timestamp = new Date().getTime();
-            const timestamp = new Date().getTime();
             
-            // Bulletproof pathing: automatically detects the repo name and fixes slashes
-            let basePath = window.location.pathname;
-            if (!basePath.endsWith('/')) {
-                basePath += '/';
-            }
-            
-            imgElement.src = `${basePath}public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
+            // Clean, relative path that works universally
+            imgElement.src = `public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
             statusElement.innerText = `${model.toUpperCase()} - Forecast Hour ${fhr}`;
         }
 
         function changeHour(step) {
             skipDirection = step; 
-            skipAttempts = 0;     // Reset failsafe on new click
+            skipAttempts = 0;     
             
             currentHour += step;
             if (currentHour > maxHour) currentHour = 1;
@@ -141,21 +76,17 @@
             updateImage();
         }
 
-        // The Magic Auto-Skip Function
         function handleMissingImage() {
             skipAttempts++;
             
-            // If we haven't checked all 48 possible hours, fast-forward to the next one
             if (skipAttempts < maxHour) {
                 currentHour += skipDirection;
                 
-                // Wrap around rules
                 if (currentHour > maxHour) currentHour = 1;
                 if (currentHour < 1) currentHour = maxHour;
                 
                 updateImage();
             } else {
-                // Failsafe: If literally 0 maps exist, show the error box
                 const imgElement = document.getElementById("mapImage");
                 const errorBox = document.getElementById("errorBox");
                 const statusElement = document.getElementById("statusText");
@@ -166,7 +97,6 @@
             }
         }
 
-        // Reset to hour 1 when flipping between models
         document.getElementById("modelSelect").addEventListener("change", function() {
             currentHour = 1;
             skipDirection = 1;
