@@ -159,10 +159,14 @@ def process_href(date_str, run_cycle, run_info):
             # Variables Calculation
             rh = calculate_rh(ds_sfc_sub['t2m'].values, ds_sfc_sub['d2m'].values)
             
-            # Wind Calculation (HREF usually provides u10 and v10 for 10m wind)
-            u10 = ds_wind_sub['u10'].values
-            v10 = ds_wind_sub['v10'].values
-            wind_speed_ms = np.sqrt(u10**2 + v10**2)
+           # Wind Calculation (Try pre-calculated si10 first, fallback to U/V)
+            if 'si10' in ds_wind_sub.data_vars:
+                wind_speed_ms = ds_wind_sub['si10'].values
+            else:
+                u10 = ds_wind_sub['u10'].values
+                v10 = ds_wind_sub['v10'].values
+                wind_speed_ms = np.sqrt(u10**2 + v10**2)
+                
             wind_mph = ms_to_mph(wind_speed_ms)
             
             # Extract gusts (try surface first, fallback to 10m)
