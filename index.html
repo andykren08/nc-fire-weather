@@ -5,34 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NC Fire Weather Forecast</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
-        h1 { color: #333; }
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
-        .map-container { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f4f4f4; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        h1 { color: #333; margin-bottom: 5px; }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        select, button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #004494; }
+        .viewer-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        #mapImage {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 400px; /* Keeps the box from jumping if an image is missing */
+        }
+        #statusText {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #444;
+        }
+        .instructions {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
     <h1>North Carolina Fire Danger Forecast</h1>
-    <p>Automated output based on HREF and NDFD thresholds.</p>
+    <p>Automated output based on relative humidity and wind thresholds.</p>
 
-    <h2>NDFD Output</h2>
-    <div class="gallery" id="ndfd-gallery"></div>
+    <div class="controls">
+        <select id="modelSelect" onchange="updateImage()">
+            <option value="ndfd">NDFD (Operational)</option>
+            <option value="href">HREF (Ensemble)</option>
+        </select>
+        
+        <button onclick="changeHour(-1)">&#10094; Prev</button>
+        <button onclick="changeHour(1)">Next &#10095;</button>
+    </div>
+
+    <div class="viewer-container">
+        <img id="mapImage" src="" alt="Forecast Map loading..." onerror="handleMissingImage()">
+        <div id="statusText">Loading...</div>
+    </div>
+    
+    <p class="instructions">Tip: You can use the <strong>Left</strong> and <strong>Right</strong> arrow keys on your keyboard to navigate.</p>
 
     <script>
-        // Simple script to load images 1 through 48
-        const ndfdGallery = document.getElementById('ndfd-gallery');
-        
-        for (let i = 1; i <= 48; i++) {
-            let fhr = i.toString().padStart(2, '0');
+        let currentHour = 1;
+        const maxHour = 48;
+
+        function updateImage() {
+            const model = document.getElementById("modelSelect").value;
+            const fhr = currentHour.toString().padStart(2, '0'); // Formats 1 to "01"
             
-            // NDFD
-            let imgContainer = document.createElement('div');
-            imgContainer.className = 'map-container';
-            imgContainer.innerHTML = `<p>Forecast Hour ${fhr}</p><img src="public/images/ndfd_fire_danger_f${fhr}.png" onerror="this.parentElement.style.display='none'">`;
-            ndfdGallery.appendChild(imgContainer);
+            const imgElement = document.getElementById("mapImage");
+            const statusElement = document.getElementById("statusText");
+
+            // Build the file path based on model and hour
+            imgElement.src = `public/images/${model}_fire_danger_f${fhr}.png`;
+            statusElement.innerText = `${model.toUpperCase()} - Forecast Hour ${fhr}`;
         }
+
+        function changeHour(step) {
+            currentHour += step;
+            
+            // Loop around if we go past 48 or below 1
+            if (currentHour > maxHour) currentHour = 1;
+            if (currentHour < 1) currentHour = maxHour;
+            
+            updateImage();
+        }
+
+        // Handle images that haven't been generated yet
+        function handleMissingImage() {
+            const imgElement = document.getElementById("mapImage");
+            const model = document.getElementById("modelSelect").value.toUpperCase();
+            const fhr = currentHour.toString().padStart(2, '0');
+            
+            // Replaces the broken image icon with a placeholder image indicating data isn't ready
+            imgElement.src = `https://via.placeholder.com/800x600?text=${model}+F${fhr}+Not+Available`;
+        }
+
+        // Listen for keyboard arrow presses
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "ArrowRight") {
+                changeHour(1);
+            } else if (event.key === "ArrowLeft") {
+                changeHour(-1);
+            }
+        });
+
+        // Load the very first image when the page opens
+        window.onload = updateImage;
     </script>
 
 </body>
