@@ -65,7 +65,6 @@
             color: #666;
             margin-top: 10px;
         }
-        /* New style for the missing map warning */
         .error-box {
             padding: 40px;
             background-color: #ffebee;
@@ -73,7 +72,7 @@
             border-radius: 8px;
             color: #c62828;
             font-weight: bold;
-            display: none; /* Hidden by default */
+            display: none;
         }
     </style>
 </head>
@@ -83,7 +82,7 @@
     <p>Automated output based on relative humidity and wind thresholds.</p>
 
     <div class="controls">
-        <select id="modelSelect" onchange="updateImage()">
+        <select id="modelSelect">
             <option value="ndfd">NDFD (Operational)</option>
             <option value="href">HREF (Ensemble)</option>
         </select>
@@ -101,51 +100,64 @@
     <p class="instructions">Tip: You can use the <strong>Left</strong> and <strong>Right</strong> arrow keys on your keyboard to navigate.</p>
 
     <script>
-        let currentHour = 1;
-        const maxHour = 48;
+        // Define the specific hours each model outputs to handle 3-hour skips
+        const validHref = Array.from({length: 48}, (_, i) => i + 1);
+        const validNdfd = Array.from({length: 37}, (_, i) => i + 1).concat([40, 43, 46, 49]);
+
+        let currentIndex = 0; // Tracks position in the array instead of raw hour
 
         function updateImage() {
             const model = document.getElementById("modelSelect").value;
+            const validHours = (model === "href") ? validHref : validNdfd;
+            
+            // Failsafe: keep index within bounds
+            if (currentIndex >= validHours.length) currentIndex = validHours.length - 1;
+            
+            const currentHour = validHours[currentIndex];
             const fhr = currentHour.toString().padStart(2, '0'); 
             
             const imgElement = document.getElementById("mapImage");
             const statusElement = document.getElementById("statusText");
             const errorBox = document.getElementById("errorBox");
 
-            // Reset visibility: Show image, hide error box
             imgElement.style.display = "block";
             errorBox.style.display = "none";
 
-            // Build the file path based on model and hour
+            // Absolute pathing + cache buster
             const timestamp = new Date().getTime();
-            imgElement.src = `./public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
+            imgElement.src = `/nc-fire-weather/public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
             statusElement.innerText = `${model.toUpperCase()} - Forecast Hour ${fhr}`;
         }
 
         function changeHour(step) {
-            currentHour += step;
+            const model = document.getElementById("modelSelect").value;
+            const validHours = (model === "href") ? validHref : validNdfd;
+
+            currentIndex += step;
             
-            if (currentHour > maxHour) currentHour = 1;
-            if (currentHour < 1) currentHour = maxHour;
+            // Loop around if at the ends
+            if (currentIndex >= validHours.length) currentIndex = 0;
+            if (currentIndex < 0) currentIndex = validHours.length - 1;
             
             updateImage();
         }
 
-        // Safely handles missing images without external websites or infinite loops
+        // Reset to the first frame when switching between models
+        document.getElementById("modelSelect").addEventListener("change", function() {
+            currentIndex = 0;
+            updateImage();
+        });
+
         function handleMissingImage() {
             const imgElement = document.getElementById("mapImage");
             const errorBox = document.getElementById("errorBox");
-            
             imgElement.style.display = "none";
             errorBox.style.display = "block";
         }
 
         document.addEventListener('keydown', function(event) {
-            if (event.key === "ArrowRight") {
-                changeHour(1);
-            } else if (event.key === "ArrowLeft") {
-                changeHour(-1);
-            }
+            if (event.key === "ArrowRight") changeHour(1);
+            else if (event.key === "ArrowLeft") changeHour(-1);
         });
 
         window.onload = updateImage;
