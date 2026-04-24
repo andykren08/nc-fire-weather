@@ -118,7 +118,15 @@
             errorBox.style.display = "none";
 
             const timestamp = new Date().getTime();
-            imgElement.src = `public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
+            const timestamp = new Date().getTime();
+            
+            // Bulletproof pathing: automatically detects the repo name and fixes slashes
+            let basePath = window.location.pathname;
+            if (!basePath.endsWith('/')) {
+                basePath += '/';
+            }
+            
+            imgElement.src = `${basePath}public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
             statusElement.innerText = `${model.toUpperCase()} - Forecast Hour ${fhr}`;
         }
 
