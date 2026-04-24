@@ -260,7 +260,11 @@ def process_ndfd():
                 # Override if we successfully loaded the gust file and times match
                 if ds_gust and v_time in ds_gust_sub.valid_time.values:
                     g_idx = np.where(ds_gust_sub.valid_time.values == v_time)[0][0]
-                    gust_ms = ds_gust_sub.isel(step=g_idx)['gust'].values
+                    # Look for i10fg first, fallback to gust
+                    if 'i10fg' in ds_gust_sub.data_vars:
+                        gust_ms = ds_gust_sub.isel(step=g_idx)['i10fg'].values
+                    else:
+                        gust_ms = ds_gust_sub.isel(step=g_idx)['gust'].values
                     gust_mph = ms_to_mph(gust_ms)
 
                 danger_grid = calculate_fire_danger(rh_data, wind_mph, gust_mph)
