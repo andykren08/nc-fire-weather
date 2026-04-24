@@ -23,7 +23,7 @@ CRITICAL_GUST_MIN = 30.0      # mph
 
 # Elevated Fire Danger Thresholds (Provides a buffer category)
 ELEVATED_RH_MAX = 30.0        # %
-ELEVATED_WIND_MIN = 8.0      # mph
+ELEVATED_WIND_MIN = 15.0      # mph
 ELEVATED_GUST_MIN = 25.0      # mph
 
 def get_domain_slice(ds, extent):
