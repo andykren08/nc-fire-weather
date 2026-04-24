@@ -42,13 +42,17 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             max-width: 900px;
             margin: 0 auto;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         #mapImage {
             max-width: 100%;
             height: auto;
             border: 1px solid #ddd;
             border-radius: 4px;
-            min-height: 400px; /* Keeps the box from jumping if an image is missing */
         }
         #statusText {
             font-size: 18px;
@@ -60,6 +64,16 @@
             font-size: 14px;
             color: #666;
             margin-top: 10px;
+        }
+        /* New style for the missing map warning */
+        .error-box {
+            padding: 40px;
+            background-color: #ffebee;
+            border: 2px dashed #ef9a9a;
+            border-radius: 8px;
+            color: #c62828;
+            font-weight: bold;
+            display: none; /* Hidden by default */
         }
     </style>
 </head>
@@ -79,7 +93,8 @@
     </div>
 
     <div class="viewer-container">
-        <img id="mapImage" src="" alt="Forecast Map loading..." onerror="handleMissingImage()">
+        <img id="mapImage" src="" alt="Forecast Map" onerror="handleMissingImage()">
+        <div id="errorBox" class="error-box">Map data for this hour is not available yet.</div>
         <div id="statusText">Loading...</div>
     </div>
     
@@ -91,10 +106,15 @@
 
         function updateImage() {
             const model = document.getElementById("modelSelect").value;
-            const fhr = currentHour.toString().padStart(2, '0'); // Formats 1 to "01"
+            const fhr = currentHour.toString().padStart(2, '0'); 
             
             const imgElement = document.getElementById("mapImage");
             const statusElement = document.getElementById("statusText");
+            const errorBox = document.getElementById("errorBox");
+
+            // Reset visibility: Show image, hide error box
+            imgElement.style.display = "block";
+            errorBox.style.display = "none";
 
             // Build the file path based on model and hour
             imgElement.src = `public/images/${model}_fire_danger_f${fhr}.png`;
@@ -104,24 +124,21 @@
         function changeHour(step) {
             currentHour += step;
             
-            // Loop around if we go past 48 or below 1
             if (currentHour > maxHour) currentHour = 1;
             if (currentHour < 1) currentHour = maxHour;
             
             updateImage();
         }
 
-        // Handle images that haven't been generated yet
+        // Safely handles missing images without external websites or infinite loops
         function handleMissingImage() {
             const imgElement = document.getElementById("mapImage");
-            const model = document.getElementById("modelSelect").value.toUpperCase();
-            const fhr = currentHour.toString().padStart(2, '0');
+            const errorBox = document.getElementById("errorBox");
             
-            // Replaces the broken image icon with a placeholder image indicating data isn't ready
-            imgElement.src = `https://via.placeholder.com/800x600?text=${model}+F${fhr}+Not+Available`;
+            imgElement.style.display = "none";
+            errorBox.style.display = "block";
         }
 
-        // Listen for keyboard arrow presses
         document.addEventListener('keydown', function(event) {
             if (event.key === "ArrowRight") {
                 changeHour(1);
@@ -130,7 +147,6 @@
             }
         });
 
-        // Load the very first image when the page opens
         window.onload = updateImage;
     </script>
 
