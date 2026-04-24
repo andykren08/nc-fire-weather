@@ -2,12 +2,26 @@ name: Generate Fire Danger Maps
 
 on:
   schedule:
-    # Runs at 04:30 UTC (for 00z run) and 16:30 UTC (for 12z run)
+    # Runs at 04:30 UTC and 16:30 UTC
     - cron: '30 4,16 * * *'
-  workflow_dispatch: # This allows you to click a button to run it manually anytime
+  workflow_dispatch:
+
+# These permissions are required to deploy directly to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Prevents multiple runs from tripping over each other
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
 
     steps:
@@ -19,11 +33,10 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install System Dependencies (Cartopy & cfgrib)
+    - name: Install System Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libeccodes0 libeccodes-dev
-        sudo apt-get install -y libgeos-dev libproj-dev proj-data proj-bin
+        sudo apt-get install -y libeccodes0 libeccodes-dev libgeos-dev libproj-dev proj-data proj-bin
 
     - name: Install Python Dependencies
       run: |
@@ -31,13 +44,16 @@ jobs:
         pip install numpy xarray netCDF4 requests matplotlib cartopy metpy ecmwflibs eccodes cfgrib
 
     - name: Run Fire Danger Script
-      run: python fire_danger.py # <-- CHANGE THIS to your actual python file name
+      run: python fire_danger.py
 
-    - name: Commit and Push Generated Images
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        mkdir -p public/images
-        git add public/images/
-        # Only commit if there are changes
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update fire weather maps" && git push)
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.' # This grabs your index.html and the generated public/images folder
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
