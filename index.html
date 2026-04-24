@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NC Fire Weather Forecast</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .map-container { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <h1>North Carolina Fire Danger Forecast</h1>
+    <p>Automated output based on HREF and NDFD thresholds.</p>
+
+    <h2>NDFD Output</h2>
+    <div class="gallery" id="ndfd-gallery"></div>
+
+    <script>
+        // Simple script to load images 1 through 48
+        const ndfdGallery = document.getElementById('ndfd-gallery');
+        
+        for (let i = 1; i <= 48; i++) {
+            let fhr = i.toString().padStart(2, '0');
+            
+            // NDFD
+            let imgContainer = document.createElement('div');
+            imgContainer.className = 'map-container';
+            imgContainer.innerHTML = `<p>Forecast Hour ${fhr}</p><img src="public/images/ndfd_fire_danger_f${fhr}.png" onerror="this.parentElement.style.display='none'">`;
+            ndfdGallery.appendChild(imgContainer);
+        }
+    </script>
+
+</body>
+</html>
