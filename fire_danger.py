@@ -199,16 +199,25 @@ def process_ndfd():
     gust_file = download_file(ndfd_gust_url, "ndfd_gust.grib2")
     rh_file = download_file(ndfd_rh_url, "ndfd_rh.grib2")
 
-    if wspd_file and gust_file and rh_file:
+    # Make gust_file OPTIONAL here
+    if wspd_file and rh_file:
         try:
             ds_wspd = xr.open_dataset(wspd_file, engine='cfgrib')
-            ds_gust = xr.open_dataset(gust_file, engine='cfgrib')
             ds_rh = xr.open_dataset(rh_file, engine='cfgrib', backend_kwargs={'filter_by_keys': {'shortName': '2r'}})
+            
+            # Safely try to open gust if it downloaded
+            ds_gust = None
+            if gust_file:
+                try:
+                    ds_gust = xr.open_dataset(gust_file, engine='cfgrib')
+                except Exception:
+                    pass
 
             n_ysl, n_xsl = get_domain_slice(ds_rh, PLOT_EXTENT)
             ds_wspd_sub = ds_wspd.isel(y=n_ysl, x=n_xsl)
-            ds_gust_sub = ds_gust.isel(y=n_ysl, x=n_xsl)
             ds_rh_sub = ds_rh.isel(y=n_ysl, x=n_xsl)
+            if ds_gust:
+                ds_gust_sub = ds_gust.isel(y=n_ysl, x=n_xsl)
             
             n_lats = ds_rh_sub.latitude.values
             n_lons = ds_rh_sub.longitude.values
@@ -225,7 +234,6 @@ def process_ndfd():
             valid_times_rh = np.atleast_1d(ds_rh_sub.valid_time.values)
             valid_times_wspd = np.atleast_1d(ds_wspd_sub.valid_time.values)
             
-            # Find times where we have both RH and Wind
             common_times = np.intersect1d(valid_times_rh, valid_times_wspd)
 
             fhr = 1
@@ -239,9 +247,10 @@ def process_ndfd():
                 wspd_ms = ds_wspd_sub.isel(step=wspd_idx)['10si'].values if '10si' in ds_wspd_sub.data_vars else ds_wspd_sub.isel(step=wspd_idx)['wspd'].values
                 wind_mph = ms_to_mph(wspd_ms)
                 
-                # Fetch Gust if valid time aligns, otherwise assume sustained = gust
-                gust_mph = wind_mph
-                if v_time in ds_gust_sub.valid_time.values:
+                # Default gust to sustained wind
+                gust_mph = wind_mph 
+                # Override if we successfully loaded the gust file and times match
+                if ds_gust and v_time in ds_gust_sub.valid_time.values:
                     g_idx = np.where(ds_gust_sub.valid_time.values == v_time)[0][0]
                     gust_ms = ds_gust_sub.isel(step=g_idx)['gust'].values
                     gust_mph = ms_to_mph(gust_ms)
@@ -252,13 +261,13 @@ def process_ndfd():
                 fhr += 1
                 
             ds_wspd.close()
-            ds_gust.close()
             ds_rh.close()
+            if ds_gust: ds_gust.close()
         except Exception as e:
             print(f"Error processing NDFD: {e}")
         finally:
             for f in [wspd_file, gust_file, rh_file]:
-                if os.path.exists(f): os.remove(f)
+                if f and os.path.exists(f): os.remove(f)
 
 def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
