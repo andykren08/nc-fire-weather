@@ -117,7 +117,8 @@
             errorBox.style.display = "none";
 
             // Build the file path based on model and hour
-            imgElement.src = `public/images/${model}_fire_danger_f${fhr}.png`;
+            const timestamp = new Date().getTime();
+            imgElement.src = `./public/images/${model}_fire_danger_f${fhr}.png?v=${timestamp}`;
             statusElement.innerText = `${model.toUpperCase()} - Forecast Hour ${fhr}`;
         }
 
